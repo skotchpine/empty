@@ -15,14 +15,25 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "pug": "^3.0.0",
+    "react": "^17.0.1"
+  },
   "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.6.3",
+    "eslint": "^7.18.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-autofix": "^1.0.3",
+    "eslint-plugin-babel": "^5.3.1",
+    "eslint-plugin-prettier": "^3.3.1",
     "jest": "^26.6.3",
     "loader-utils": "^2.0.0",
     "memfs": "^3.2.0",
+    "prettier": "^2.2.1",
     "webpack": "^5.17.0",
-    "webpack-cli": "^4.4.0",
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "babel-jest": "^26.6.3"
+    "webpack-cli": "^4.4.0"
   }
 }
