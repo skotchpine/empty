@@ -1,10 +1,10 @@
-import {getOptions} from 'loader-utils'
+const {getOptions} = require('loader-utils')
 
-import lex from 'pug-lexer'
-import stripComments from 'pug-strip-comments'
-import parse from 'pug-parser'
+const lex = require('pug-lexer')
+const stripComments = require('pug-strip-comments')
+const parse = require('pug-parser')
 
-export default (source) => {
+module.exports = (source) => {
   const options = getOptions(source)
   const tokensWithComments = lex(source, options)
   const tokens = stripComments(tokensWithComments, options)
