@@ -12,12 +12,12 @@ module.exports = (source) => {
   return `import React from 'react';\nexport default () => ${compile(ast)};`
 }
 
-const compile = (ast) => visitNode(ast)
+const compile = (ast) => visitNode(ast, true)
 
-const visitNode = (node) => {
+const visitNode = (node, isRoot) => {
   switch (node.type) {
     case 'Block':
-      return visitBlock(node)
+      return visitBlock(node, isRoot)
 
     case 'Tag':
       return visitTag(node)
@@ -30,13 +30,18 @@ const visitNode = (node) => {
   }
 }
 
-const visitBlock = (block) => {
+const visitBlock = (block, isRoot) => {
   if (block.nodes.length < 1) {
-    return 'React.createElement(React.Fragment, {}, [])'
+    return isRoot ? 'React.createElement(React.Fragment, {}, null)' : null
   }
 
   const compiled = block.nodes.map((node) => visitNode(node))
-  return `React.createElement(React.Fragment, {}, [${compiled.join(', ')}])`
+  if (compiled.length < 2) {
+    return compiled
+  }
+  return isRoot
+    ? `React.createElement(React.Fragment, {}, ${compiled.join(', ')})`
+    : compiled.join(', ')
 }
 
 const visitTag = (tag) =>

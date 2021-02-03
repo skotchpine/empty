@@ -1,2 +1,2 @@
 import React from 'react';
-export default () => React.createElement(React.Fragment, {}, []);
+export default () => React.createElement(React.Fragment, {}, null);
