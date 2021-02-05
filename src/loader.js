@@ -10,31 +10,69 @@ module.exports = (source) => {
   const tokensWithComments = lex(source, options)
   const tokens = stripComments(tokensWithComments, options)
   const ast = parse(tokens)
-  return `import React from 'react';\nexport default () => ${compile(ast)};`
+
+  const {mod, args, body, render} = compile(ast)
+  return `import React from 'react';${mod}\nexport default (${args}) => {\n${body}return ${render};\n};\n`
 }
 
-const compile = (ast) => visitNode(ast, true)
+const compile = (ast) => {
+  var mod = '', args = '{', body = '', render = ''
 
-const visitNode = (node, isRoot) => {
+  ast.nodes.forEach(node => {
+    if (node.name == 'component') {
+      if (node.attrs.length) {
+        node.attrs.forEach((attr, i) => {
+          if (i > 0) args += ', '
+          args += attr.name
+          if (attr.val && attr.val !== true) args += `=${attr.val}`
+        })
+      }
+      args += '}'
+
+      const [b, r] = visitorsByType.Block(node.block, true)
+      if (b.length) body = b
+      if (r.length) render = r
+
+      return
+    }
+
+    throw new Error(`Element type not allowed at top level: ${node.name}`)
+  })
+
+  return {mod, args, body, render}
+}
+
+const visitNode = (node) => {
   const visitor = visitorsByType[node.type]
   if (!visitor) {
     throw new Error(`unknown Node type: ${node.type}`)
   }
-  return visitor(node, isRoot)
+  return visitor(node)
 }
 
 const visitorsByType = {
   Block: (block, isRoot) => {
-    if (block.nodes.length < 1) {
-      return isRoot ? 'React.createElement(React.Fragment, {}, null)' : null
+    var code = ''
+    var children = []
+    block.nodes.forEach((node) => {
+      const [c, ch] = visitNode(node)
+      if (c.length) code += `${c};\n`
+      if (ch.length) children.push(ch)
+    })
+
+    if (children.length < 1) {
+      return isRoot
+        ? [code, 'React.createElement(React.Fragment, {}, null)']
+        : [code, 'null']
     }
-    const children = block.nodes.map((node) => visitNode(node))
+
     if (children.length < 2 && block.nodes[0].type !== 'Each') {
-      return children
+      return [code, children]
     }
+
     return isRoot
-      ? `React.createElement(React.Fragment, {}, ${children.join(', ')})`
-      : children.join(', ')
+      ? [code, `React.createElement(React.Fragment, {}, ${children.join(', ')})`]
+      : [code, children.join(', ')]
   },
 
   Tag: (tag) => {
@@ -49,22 +87,30 @@ const visitorsByType = {
     }
     attrs += '}'
 
-    const children = visitorsByType.Block(tag.block)
-    return `React.createElement('${tag.name}', ${attrs}, ${children})`
+    const [code, children] = visitorsByType.Block(tag.block)
+    return [code, `React.createElement('${tag.name}', ${attrs}, ${children})`]
   },
 
   Each: (each) => {
     var params = each.val
     if (each.key) {
-      params += `, ${params}`
+      params += `, ${each.key}`
     }
 
-    const children = visitorsByType.Block(each.block, true)
-    return `${each.obj}.map((${params}) => ${children})`
+    const [code, children] = visitorsByType.Block(each.block, true)
+    return [code, `${each.obj}.map((${params}) => ${children})`]
   },
 
-  Text: (text) => `'${text.val}'`,
-  Code: (code) => code.val,
+  Text: (text) => ['', `'${text.val.replace("'", "\\'")}'`],
 
-  Filter: (filter) => console.log(filter, filter.block.nodes),
+  Code: (code) => {
+    return code.buffer
+      ? ['', code.val]
+      : [code.val, '']
+  },
+
+  Filter: (filter) => {
+    console.log(filter, filter.block.nodes)
+    return ['', '']
+  },
 }

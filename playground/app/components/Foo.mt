@@ -1,4 +1,4 @@
-:import App
+//:import App
 
 h1 bar
 

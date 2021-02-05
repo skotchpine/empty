@@ -1,2 +1,4 @@
 import React from 'react';
-export default () => React.createElement('p', {}, 'hi');
+export default ({}) => {
+return React.createElement('p', {}, 'hi');
+};

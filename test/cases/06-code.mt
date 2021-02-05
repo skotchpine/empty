@@ -1,0 +1,2 @@
+component
+  - console.log('foo')

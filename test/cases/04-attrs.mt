@@ -1,1 +1,2 @@
-input(onChange=()=>alert('changed'))
+component
+  input(onChange=()=>alert('changed'))
