@@ -3,6 +3,7 @@ const {getOptions} = require('loader-utils')
 const lex = require('pug-lexer')
 const stripComments = require('pug-strip-comments')
 const parse = require('pug-parser')
+const { transform } = require('@babel/core')
 
 module.exports = (source) => {
   const options = getOptions(source)
@@ -15,36 +16,55 @@ module.exports = (source) => {
 const compile = (ast) => visitNode(ast, true)
 
 const visitNode = (node, isRoot) => {
-  switch (node.type) {
-    case 'Block':
-      return visitBlock(node, isRoot)
-
-    case 'Tag':
-      return visitTag(node)
-
-    case 'Text':
-      return visitText(node)
-
-    default:
-      throw new Error(`unknown Node type: ${node.type}`)
+  const visitor = visitorsByType[node.type]
+  if (!visitor) {
+    throw new Error(`unknown Node type: ${node.type}`)
   }
+  return visitor(node, isRoot)
 }
 
-const visitBlock = (block, isRoot) => {
-  if (block.nodes.length < 1) {
-    return isRoot ? 'React.createElement(React.Fragment, {}, null)' : null
-  }
+const visitorsByType = {
+  Block: (block, isRoot) => {
+    if (block.nodes.length < 1) {
+      return isRoot ? 'React.createElement(React.Fragment, {}, null)' : null
+    }
+    const children = block.nodes.map((node) => visitNode(node))
+    if (children.length < 2 && block.nodes[0].type !== 'Each') {
+      return children
+    }
+    return isRoot
+      ? `React.createElement(React.Fragment, {}, ${children.join(', ')})`
+      : children.join(', ')
+  },
 
-  const compiled = block.nodes.map((node) => visitNode(node))
-  if (compiled.length < 2) {
-    return compiled
-  }
-  return isRoot
-    ? `React.createElement(React.Fragment, {}, ${compiled.join(', ')})`
-    : compiled.join(', ')
+  Tag: (tag) => {
+    var attrs = '{'
+    if (tag.attrs) {
+      tag.attrs.forEach((attr, i) => {
+        attrs += `${attr.name}: ${attr.val}`
+        if (i + 1 < tag.attrs.length) {
+          attrs += ', '
+        }
+      })
+    }
+    attrs += '}'
+
+    const children = visitorsByType.Block(tag.block)
+    return `React.createElement('${tag.name}', ${attrs}, ${children})`
+  },
+
+  Each: (each) => {
+    var params = each.val
+    if (each.key) {
+      params += `, ${params}`
+    }
+
+    const children = visitorsByType.Block(each.block, true)
+    return `${each.obj}.map((${params}) => ${children})`
+  },
+
+  Text: (text) => `'${text.val}'`,
+  Code: (code) => code.val,
+
+  Filter: (filter) => console.log(filter, filter.block.nodes),
 }
-
-const visitTag = (tag) =>
-  `React.createElement('${tag.name}', {}, ${visitBlock(tag.block)})`
-
-const visitText = (text) => `'${text.val}'`
