@@ -12,13 +12,21 @@ module.exports = (source) => {
   const ast = parse(tokens)
 
   const {mod, args, body, render} = compile(ast)
-  return `import React from 'react';${mod}\nexport default (${args}) => {\n${body}return ${render};\n};\n`
+  return `import React from 'react';\n${mod}export default (${args}) => {\n${body}return ${render};\n};\n`
 }
 
 const compile = (ast) => {
   var mod = '', args = '{', body = '', render = ''
 
   ast.nodes.forEach(node => {
+    if (node.type == 'Code') {
+      if (node.buffered) {
+        throw new Error(`Buffered code is not allowed at top level`)
+      }
+      mod += `${node.val};\n`
+      return
+    }
+
     if (node.name == 'component') {
       if (node.attrs.length) {
         node.attrs.forEach((attr, i) => {
@@ -36,7 +44,7 @@ const compile = (ast) => {
       return
     }
 
-    throw new Error(`Element type not allowed at top level: ${node.name}`)
+    throw new Error(`Element type not allowed at top level: ${node.type}.${node.name}`)
   })
 
   return {mod, args, body, render}
