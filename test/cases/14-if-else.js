@@ -2,14 +2,14 @@ import React from 'react';
 export default ({x, y}) => {
 return x ? (()=>{
 console.log('hi');
-React.createElement('p', {}, 'hi');
+return React.createElement('p', {}, `hi`);
 })() : (()=>{
-y ? (()=>{
+return y ? (()=>{
 console.log('bye');
-React.createElement('p', {}, 'bye');
+return React.createElement('p', {}, `bye`);
 })() : (()=>{
 console.log('mt');
-React.createElement('p', {}, 'mt');
+return React.createElement('p', {}, `mt`);
 })();
 })();
 };

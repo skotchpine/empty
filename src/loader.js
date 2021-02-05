@@ -109,7 +109,7 @@ const visitorsByType = {
     return ['', `${each.obj}.map((${params}) => {\n${code}return ${children};\n})`]
   },
 
-  Text: (text) => ['', `\`${text.val.replace("`", "\\`")}\``],
+  Text: (text) => ['', `\`${text.val.replace(/`/g, "\\`")}\``],
 
   Code: (code) => {
     return code.buffer

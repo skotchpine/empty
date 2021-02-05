@@ -1,2 +1,2 @@
 component
-  p let's go!
+  p the `a` tag
