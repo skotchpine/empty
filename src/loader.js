@@ -126,7 +126,7 @@ const visitorsByType = {
     const branch = (node) => {
       if (!node) return 'null'
 
-      const [code, render] = visitorsByType.Block(node)
+      const [code, render] = visitNode(node)
 
       var out = '(()=>{\n'
       if (code.length) out += code
