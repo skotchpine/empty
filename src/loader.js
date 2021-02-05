@@ -50,12 +50,12 @@ const compile = (ast) => {
   return {mod, args, body, render}
 }
 
-const visitNode = (node) => {
+const visitNode = (node, isRoot) => {
   const visitor = visitorsByType[node.type]
   if (!visitor) {
     throw new Error(`unknown Node type: ${node.type}`)
   }
-  return visitor(node)
+  return visitor(node, isRoot)
 }
 
 const visitorsByType = {
@@ -109,7 +109,7 @@ const visitorsByType = {
     return ['', `${each.obj}.map((${params}) => {\n${code}return ${children};\n})`]
   },
 
-  Text: (text) => ['', `'${text.val.replace("'", "\\'")}'`],
+  Text: (text) => ['', `\`${text.val.replace("`", "\\`")}\``],
 
   Code: (code) => {
     return code.buffer
@@ -126,11 +126,11 @@ const visitorsByType = {
     const branch = (node) => {
       if (!node) return 'null'
 
-      const [code, render] = visitNode(node)
+      const [code, render] = visitNode(node, true)
 
       var out = '(()=>{\n'
       if (code.length) out += code
-      out += render
+      out += `return ${render}`
       out += ';\n})()'
       return out
     }
