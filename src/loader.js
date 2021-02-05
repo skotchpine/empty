@@ -121,4 +121,20 @@ const visitorsByType = {
     console.log(filter, filter.block.nodes)
     return ['', '']
   },
+
+  Conditional: (cond) => {
+    const branch = (node) => {
+      if (!node) return 'null'
+
+      const [code, render] = visitorsByType.Block(node)
+
+      var out = '(()=>{\n'
+      if (code.length) out += code
+      out += render
+      out += ';\n})()'
+      return out
+    }
+
+    return ['', `${cond.test} ? ${branch(cond.consequent)} : ${branch(cond.alternate)}`]
+  }
 }
