@@ -98,7 +98,7 @@ const visitorsByType = {
     }
 
     const [code, children] = visitorsByType.Block(each.block, true)
-    return [code, `${each.obj}.map((${params}) => ${children})`]
+    return ['', `${each.obj}.map((${params}) => {\n${code}return ${children};\n})`]
   },
 
   Text: (text) => ['', `'${text.val.replace("'", "\\'")}'`],
