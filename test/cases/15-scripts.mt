@@ -1,8 +1,8 @@
-script
-  console.log('inside')
+:js
+  console.log('outside')
 
 component
-  script
-    console.log('outside')
+  :js
+    console.log('inside')
 
   p scriptable

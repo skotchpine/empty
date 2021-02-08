@@ -19,7 +19,7 @@ const compile = (ast) => {
   var mod = '', args = '{', body = '', render = ''
 
   ast.nodes.forEach(node => {
-    if (node.type == 'Code') {
+    if (node.type === 'Code') {
       if (node.buffered) {
         throw new Error(`Buffered code is not allowed at top level`)
       }
@@ -27,7 +27,12 @@ const compile = (ast) => {
       return
     }
 
-    if (node.name == 'component') {
+    if (node.type === 'Filter' && node.name === 'js') {
+      mod += node.block.nodes.map((node) => node.val).join('')
+      return
+    }
+
+    if (node.name === 'component') {
       if (node.attrs.length) {
         node.attrs.forEach((attr, i) => {
           if (i > 0) args += ', '
@@ -84,6 +89,10 @@ const visitorsByType = {
   },
 
   Tag: (tag) => {
+    if (tag.name === 'script') {
+      console.log(tag)
+    }
+
     var attrs = '{'
     if (tag.attrs) {
       tag.attrs.forEach((attr, i) => {
@@ -118,8 +127,15 @@ const visitorsByType = {
   },
 
   Filter: (filter) => {
-    console.log(filter, filter.block.nodes)
-    return ['', '']
+    if (filter.name === 'js') {
+      const code = filter.block.nodes
+        .map((node) => node.val)
+        .join('')
+        .replace(/\n$/, '')
+      return [code, '']
+    }
+
+    throw new Error(`Filter type not supported in component body: ${filter.name}`)
   },
 
   Conditional: (cond) => {
